@@ -6,6 +6,15 @@ terraform {
       version = "5.46.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "najma-s3-bucket-terraform-config-storage"  
+    key            = "terraform.tfstate"          # The file path to store the state
+    region         = "us-east-1"                
+    encrypt        = true                        
+    dynamodb_table = "terraform-state-lock"       # DynamoDB table for state locking
+  }
+
 }
 
 provider "aws" {

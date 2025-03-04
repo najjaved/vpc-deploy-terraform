@@ -25,8 +25,17 @@ Update Terraform configuration to:
 - Create one or more private subnets for internal resources and configure a NAT Gateway for outbound Internet access
 - Create a route table to send internet-bound traffic from the private subnet to the NAT Gateway
 - Deploy subnets in multiple availability zones to improve redundancy and fault tolerance
+- Configure internet gateway and Nat-gateway for the added subnets
 - Add an EC2 instance to serve as a bastion host for securely accessing instances in private subnets
 - Optional: Define output variables to display key information (e.g., VPC ID, subnet IDs) after deployment
+
+## Store Terraform State in Remote S3 with DynamoDB
+Using S3 for state storage provides a centralized, durable location for your Terraform state. DynamoDB is used to lock the state file, ensuring that multiple users or processes do not update it simultaneously.
+### Steps:
+- Create S3 Bucket and DynamoDB Table
+- Configure the Backend in providers.tf (Terraform will connect to your S3 bucket and DynamoDB table as defined in your backend configuration).
+- Check in AWS that the state file is written to S3 and properly locked with DynamoDB
+
 
 
 

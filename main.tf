@@ -34,7 +34,7 @@ resource "aws_vpc" "naj_vpc" {
 # Add a public subnet resource
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.naj_vpc.id #associate subnet with the VPC created earlier
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = "10.0.41.0/24"
   map_public_ip_on_launch = true # instances launched in this subnet will automatically receive public IP addresses
   availability_zone       = "us-east-1a"
 
@@ -77,7 +77,7 @@ resource "aws_route_table_association" "public_rt_assoc" {
 # Add a private subnet
 resource "aws_subnet" "private_subnet" {
   vpc_id                  = aws_vpc.naj_vpc.id #associate subnet with the VPC created earlier
-  cidr_block              = "10.0.2.0/24"
+  cidr_block              = "10.0.42.0/24"
   map_public_ip_on_launch = false   # No public IP for private subnet
   availability_zone       = "us-east-1b" 
 
@@ -150,7 +150,7 @@ resource "aws_security_group" "new-security-group" {
 # Add EC2 instance that uses the security group
 resource "aws_instance" "new-EC2-instance" {
   ami                         = data.aws_ami.ubuntu.id   #  "ami-0cb91c7de36eed2cb"
-  instance_type               = "t2.micro"
+  instance_type               = var.instance_type # use variable defines in variables file
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.new-security-group.id]
   subnet_id                   = aws_subnet.public_subnet.id  
@@ -171,7 +171,7 @@ resource "aws_subnet" "public_subnets" {
   count             = length(var.public_subnet_cidrs) # 2
 
   vpc_id            = aws_vpc.naj_vpc.id
-  cidr_block        =var.public_subnet_cidrs[count.index]  # cidrsubnet(aws_vpc.naj_vpc.cidr_block, 4, count.index + 2)
+  cidr_block        =var.public_subnet_cidrs[count.index]  # cidrsubnet(aws_vpc.naj_vpc.cidr_block, 4, count.index + 2)  # generate subnet CIDR blocks dynamically
   availability_zone = data.aws_availability_zones.available_zones.names[count.index]
 
   map_public_ip_on_launch = true
