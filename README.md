@@ -25,8 +25,7 @@ Update Terraform configuration to:
 - Create one or more private subnets for internal resources and configure a NAT Gateway for outbound Internet access
 - Create a route table to send internet-bound traffic from the private subnet to the NAT Gateway
 - Deploy subnets in multiple availability zones to improve redundancy and fault tolerance
-- Configure internet gateway and Nat-gateway for the added subnets
-- Add an EC2 instance to serve as a bastion host for securely accessing instances in private subnets
+- Add an EC2 instance to serve as a bastion host for securely accessing instances in private subnets, i.e., deploy the bastion host in the public subnet with SSH access restricted to your trusted IP. From there, you can SSH into private instances using the bastion as an intermediary.
 - Optional: Define output variables to display key information (e.g., VPC ID, subnet IDs) after deployment
 
 ## Store Terraform State in Remote S3 with DynamoDB

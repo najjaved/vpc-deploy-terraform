@@ -5,19 +5,19 @@ data "aws_key_pair" "naj_key" {
 
 # add AMI Data Source
 data "aws_ami" "ubuntu" {
-  most_recent = true
+  most_recent = true # select the latest Ubuntu 20.04 LTS Amazon Machine Image (AMI) from AWS
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"] # wildcard (*) ensures that any newer AMI versions matching this name pattern will be included
   }
 
   filter {
     name   = "virtualization-type"
-    values = ["hvm"]
+    values = ["hvm"] # ensures the AMI has hardware-assisted virtualization (HVM)
   }
 
-  owners = ["099720109477"] # Canonical (official Ubuntu AMI owner)
+  owners = ["099720109477"] # belongs to Canonical, the official provider of Ubuntu AMIs
 }
 # Create a VPC with a CIDR block
 resource "aws_vpc" "naj_vpc" {
@@ -150,7 +150,7 @@ resource "aws_security_group" "new-security-group" {
 # Add EC2 instance that uses the security group
 resource "aws_instance" "new-EC2-instance" {
   ami                         = data.aws_ami.ubuntu.id   #  "ami-0cb91c7de36eed2cb"
-  instance_type               = var.instance_type # use variable defines in variables file
+  instance_type               = var.instance_type # use variable defined in variables file
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.new-security-group.id]
   subnet_id                   = aws_subnet.public_subnet.id  
@@ -191,6 +191,43 @@ resource "aws_subnet" "private_subnets" {
 
   tags = {
     Name = "private-subnet-${count.index + 1}"
+  }
+}
+
+#******************** deploy an EC2 instance as a bastion host ********************
+resource "aws_instance" "bastion-host" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.bastion_instance_type
+  subnet_id              = aws_subnet.public_subnet.id 
+  vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+  key_name               = data.aws_key_pair.naj_key.key_name
+
+  tags = {
+    Name = "naj-Bastion-Host"
+  }
+}
+# Create a Security Group for the Bastion Host
+resource "aws_security_group" "bastion_sg" {
+  name        = "bastion-sg"
+  description = "Allow SSH access from your trusted IP to bastion host"
+  vpc_id      = aws_vpc.naj_vpc.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.allowed_ssh_ips 
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "naj-Bastion-SG"
   }
 }
 
