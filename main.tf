@@ -30,6 +30,7 @@ resource "aws_vpc" "naj_vpc" {
   }
 }
 
+#********************************************************************************
 # Add a public subnet resource
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.naj_vpc.id #associate subnet with the VPC created earlier
@@ -47,7 +48,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.naj_vpc.id
 
   tags = {
-    Name = "InternetGateway"
+    Name = "Internet-Gateway"
   }
 }
 
@@ -72,6 +73,59 @@ resource "aws_route_table_association" "public_rt_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+#********************************************************************************
+# Add a private subnet
+resource "aws_subnet" "private_subnet" {
+  vpc_id                  = aws_vpc.naj_vpc.id #associate subnet with the VPC created earlier
+  cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = false   # No public IP for private subnet
+  availability_zone       = "us-east-1b" 
+
+  tags = {
+    Name = "private-subnet-naj"
+  }
+}
+
+# NAT Gateway requires an Elastic IP (EIP) to allow outbound internet access
+resource "aws_eip" "nat_gw_ip" {
+  domain = "vpc"
+
+  tags = {
+    Name = "NAT-Gateway-EIP"
+  }
+}
+
+# Create a NAT Gateway
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat_gw_ip.id
+  subnet_id     = aws_subnet.public_subnet.id  # the NAT Gateway will be placed in the public subnet to allow private subnet instances to access the internet
+
+  tags = {
+    Name = "NAT-Gateway"
+  }
+}
+
+#Create a Route Table for the Private Subnet
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.naj_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
+
+  tags = {
+    Name = "PrivateRouteTable"
+  }
+}
+
+# Associate the PrivateRouteTable with the Private Subnet
+resource "aws_route_table_association" "private_rt_assoc" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+#*********************************************************************
 # Add a Security Group that allows SSH (port 22)
 resource "aws_security_group" "new-security-group" {
   name        = "naj-security-group"
