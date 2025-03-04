@@ -155,7 +155,7 @@ resource "aws_instance" "new-EC2-instance" {
   vpc_security_group_ids      = [aws_security_group.new-security-group.id]
   subnet_id                   = aws_subnet.public_subnet.id  
 
-  key_name                    = data.aws_key_pair.naj_key.key_name #use existing key in ohio region
+  key_name                    = data.aws_key_pair.naj_key.key_name #use existing key in N.Virginia region
 
   tags = {
     Name = "naj-instance-terrafrom"
