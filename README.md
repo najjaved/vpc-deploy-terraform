@@ -4,7 +4,7 @@ VPC with one public subnet, a route table, and an Internet Gateway (IGW) that al
 
 ## Steps:
 - Set Up the Terraform Environment
-- Configures AWS as the cloud provider in your desired region
+- Configure AWS as the cloud provider in your desired region
 - Define the VPC Configuration
 - Add a public subnet resource
 - Add an Internet Gateway (IGW)
@@ -17,6 +17,16 @@ VPC with one public subnet, a route table, and an Internet Gateway (IGW) that al
 - Verify the Deployment in your AWS Management Console
 - Clean Up Resources
   - terraform destroy
+
+## Enhancements:
+Update Terraform configuration to:
+- Add a Security Group that allows SSH (port 22)
+- Create an EC2 instance that uses this Security Group
+- Create one or more private subnets for internal resources and configure a NAT Gateway for outbound Internet access
+- Deploy subnets in multiple availability zones to improve redundancy and fault tolerance
+- Add an EC2 instance to serve as a bastion host for securely accessing instances in private subnets
+- Optional: Define output variables to display key information (e.g., VPC ID, subnet IDs) after deployment
+
 
 
 

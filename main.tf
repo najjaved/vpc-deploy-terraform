@@ -1,3 +1,24 @@
+# Declare varaibles for existing resources in AWS
+data "aws_key_pair" "naj_key" {
+  key_name = "naj-key"
+}
+
+# add AMI Data Source
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical (official Ubuntu AMI owner)
+}
 # Create a VPC with a CIDR block
 resource "aws_vpc" "naj_vpc" {
   cidr_block           = "10.0.0.0/16"
@@ -51,5 +72,39 @@ resource "aws_route_table_association" "public_rt_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
+# Add a Security Group that allows SSH (port 22)
+resource "aws_security_group" "new-security-group" {
+  name        = "naj-security-group"
+  description = "Security group that allows SSH connection"
+  vpc_id      = aws_vpc.naj_vpc.id
 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # allows inbound SSH access from any IP (0.0.0.0/0)
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"] # allows all outbound traffic
+  }
+}
+
+# Add EC2 instance that uses the security group
+resource "aws_instance" "new-EC2-instance" {
+  ami                         = data.aws_ami.ubuntu.id   #  "ami-0cb91c7de36eed2cb"
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws_security_group.new-security-group.id]
+  subnet_id                   = aws_subnet.public_subnet.id  
+
+  key_name                    = data.aws_key_pair.naj_key.key_name #use existing key in ohio region
+
+  tags = {
+    Name = "naj-instance-terrafrom"
+  }
+}
 
