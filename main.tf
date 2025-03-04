@@ -162,3 +162,36 @@ resource "aws_instance" "new-EC2-instance" {
   }
 }
 
+#******************** Deploy subnets in multiple Availability Zones ********************************
+# Retrieve availability zones dynamically
+data "aws_availability_zones" "available_zones" {}
+
+# Define public subnets in two different availability zones
+resource "aws_subnet" "public_subnets" {
+  count             = length(var.public_subnet_cidrs) # 2
+
+  vpc_id            = aws_vpc.naj_vpc.id
+  cidr_block        =var.public_subnet_cidrs[count.index]  # cidrsubnet(aws_vpc.naj_vpc.cidr_block, 4, count.index + 2)
+  availability_zone = data.aws_availability_zones.available_zones.names[count.index]
+
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public-subnet-${count.index + 1}"
+  }
+}
+
+#Define private subnets in two different availability zones
+resource "aws_subnet" "private_subnets" {
+  count             = length(var.private_subnet_cidrs)
+   
+  vpc_id            = aws_vpc.naj_vpc.id
+  cidr_block        = var.private_subnet_cidrs[count.index] # cidrsubnet(aws_vpc.naj_vpc.cidr_block, 4, count.index) # generate subnet CIDR blocks dynamically
+  availability_zone = data.aws_availability_zones.available_zones.names[count.index]
+
+  tags = {
+    Name = "private-subnet-${count.index + 1}"
+  }
+}
+
+
